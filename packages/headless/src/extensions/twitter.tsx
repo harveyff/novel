@@ -1,6 +1,34 @@
 import { Node, mergeAttributes, nodePasteRule } from "@tiptap/core";
 import { NodeViewWrapper, ReactNodeViewRenderer, type ReactNodeViewRendererOptions } from "@tiptap/react";
+import { Component, type ReactNode } from "react";
 import { Tweet } from "react-tweet";
+
+class TweetErrorBoundary extends Component<
+  { children: ReactNode; tweetId: string },
+  { hasError: boolean }
+> {
+  state = { hasError: false };
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <a
+          href={`https://x.com/i/web/status/${this.props.tweetId}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-sm text-muted-foreground underline"
+        >
+          View tweet on X
+        </a>
+      );
+    }
+    return this.props.children;
+  }
+}
 export const TWITTER_REGEX_GLOBAL = /(https?:\/\/)?(www\.)?x\.com\/([a-zA-Z0-9_]{1,15})(\/status\/(\d+))?(\/\S*)?/g;
 export const TWITTER_REGEX = /^https?:\/\/(www\.)?x\.com\/([a-zA-Z0-9_]{1,15})(\/status\/(\d+))?(\/\S*)?$/;
 
@@ -19,7 +47,9 @@ const TweetComponent = ({ node }: { node: Partial<ReactNodeViewRendererOptions> 
   return (
     <NodeViewWrapper>
       <div data-twitter="">
-        <Tweet id={tweetId} />
+        <TweetErrorBoundary tweetId={tweetId}>
+          <Tweet id={tweetId} />
+        </TweetErrorBoundary>
       </div>
     </NodeViewWrapper>
   );

@@ -1,0 +1,13 @@
+.git
+.github
+.husky
+.next
+node_modules
+**/node_modules
+**/.next
+**/.turbo
+**/.env
+**/.env.*
+!**/.env.example
+*.md
+!README.md
