@@ -27,7 +27,10 @@ WORKDIR /app
 # Copy the full pnpm workspace install (root + package-level node_modules symlinks).
 COPY --from=deps /app/ ./
 COPY . .
-RUN pnpm build
+# Turbo "build" runs typecheck before ^build outputs exist in Docker; build
+# workspace packages directly so novel dist + .d.ts exist before next build.
+RUN pnpm --filter novel run build \
+ && pnpm --filter novel-next-app run build
 
 FROM base AS runner
 WORKDIR /app
