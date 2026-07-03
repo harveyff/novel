@@ -9,14 +9,23 @@ RUN corepack enable && corepack prepare pnpm@9.5.0 --activate
 WORKDIR /app
 
 FROM base AS deps
+ENV CI=true
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY apps/web/package.json ./apps/web/
 COPY packages/headless/package.json ./packages/headless/
 COPY packages/tsconfig/package.json ./packages/tsconfig/
-RUN pnpm install --frozen-lockfile
+RUN printf '%s\n' \
+  'onlyBuiltDependencies[]=@biomejs/biome' \
+  'onlyBuiltDependencies[]=esbuild' \
+  'onlyBuiltDependencies[]=sharp' \
+  >> .npmrc \
+  && pnpm install --frozen-lockfile
 
 FROM base AS builder
-COPY --from=deps /app/node_modules ./node_modules
+ENV CI=true
+WORKDIR /app
+# Copy the full pnpm workspace install (root + package-level node_modules symlinks).
+COPY --from=deps /app/ ./
 COPY . .
 RUN pnpm build
 
